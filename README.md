@@ -1,6 +1,6 @@
 # Paperbrain
 
-A multi-user RAG (retrieval-augmented generation) platform that lets users upload documents and chat with them. Built as a portfolio project to demonstrate full-stack engineering — from authentication and vector search to containerized deployment.
+A multi-user RAG (retrieval-augmented generation) platform that lets users upload documents and chat with them. Built as a portfolio project to demonstrate full-stack engineering from authentication and vector search to containerized deployment.
 
 🎥 **Demo video:** *coming soon*
 
