@@ -16,11 +16,3 @@ python-multipart
 bcrypt==4.2.1
 PyJWT==2.9.0
 
-#kafka check upload big file
-#security
-#db cloud
-#front
-#lien entre les docker
-#comment debugger
-#prod upload (security again)
-#video
