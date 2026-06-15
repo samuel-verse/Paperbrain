@@ -14,7 +14,13 @@ from vector_store import get_psycopg_connection
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("JWT_SECRET", "change-me-in-production-please")
+
+SECRET_KEY = os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET is not set. Define it in your .env file "
+        "(see _env.example)"
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
