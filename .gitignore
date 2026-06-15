@@ -1,0 +1,25 @@
+# Secrets
+.env
+
+# Python
+__pycache__
+
+# Node
+node_modules/
+
+
+# IDE
+.vscode/
+.idea/
+
+
+# OS
+.DS_Store
+
+
+# Data
+data/
+*.db
+*.sql
+
+question.txt
