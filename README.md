@@ -206,4 +206,4 @@ Current tests cover:
 
 ## About
 
-Built by [Samuel Verse]([https://samuel-verse.com/]) : Software Engineer.
+Built by [Samuel Verse](https://samuel-verse.com/) : Software Engineer.
