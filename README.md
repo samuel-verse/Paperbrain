@@ -6,22 +6,22 @@ A multi-user RAG (retrieval-augmented generation) platform that lets users uploa
 
 ## What it does
 
-Users sign up, upload PDFs or text files, and ask natural-language questions about their documents. Answers are grounded in the user's own corpus through vector similarity search — each user only sees their own documents.
+Users sign up, upload PDFs or text files, and ask natural-language questions about their documents. Answers are grounded in the user's own corpus through vector similarity search each user only sees their own documents.
 
 ## Tech stack
 
-- **Backend** — FastAPI · PostgreSQL + pgvector · LangChain · OpenAI embeddings & chat
-- **Frontend** — React 18 · Vite · served via nginx in production
-- **Auth** — JWT (PyJWT) + bcrypt password hashing
-- **Infrastructure** — Docker Compose (app · postgres · frontend)
+- **Backend** : FastAPI · PostgreSQL + pgvector · LangChain · OpenAI embeddings & chat
+- **Frontend** : React 18 · Vite · served via nginx in production
+- **Auth** : JWT (PyJWT) + bcrypt password hashing
+- **Infrastructure** : Docker Compose (app · postgres · frontend)
 
 ## Architecture highlights
 
-- **Per-user isolation at the vector store level** — queries filter on a `user_id` metadata tag before similarity ranking, so a user cannot retrieve another user's chunks even with crafted queries.
+- **Per-user isolation at the vector store level** : queries filter on a `user_id` metadata tag before similarity ranking, so a user cannot retrieve another user's chunks even with crafted queries.
 - **JWT-based stateless auth** with bcrypt password hashing and configurable token expiry.
-- **Pluggable ingestion pipeline** — UTF-8 text and PDF (via `pypdf`) extraction, chunked with `RecursiveCharacterTextSplitter`, indexed in pgvector with JSONB metadata.
+- **Pluggable ingestion pipeline** : UTF-8 text and PDF (via `pypdf`) extraction, chunked with `RecursiveCharacterTextSplitter`, indexed in pgvector with JSONB metadata.
 - **Optional `context_tag`** lets a user partition their own corpus (e.g. one tag per project) without needing separate Postgres collections.
-- **Document tracking** — each upload is logged in a `user_documents` table for audit and UI listing.
+- **Document tracking** : each upload is logged in a `user_documents` table for audit and UI listing.
 
 ## Security considerations
 
@@ -35,7 +35,7 @@ Users sign up, upload PDFs or text files, and ask natural-language questions abo
 
 - No rate limiting on auth endpoints yet
 - No refresh token rotation
-- CORS currently allows all origins — development setting, to be tightened before any production deployment
+- CORS currently allows all origins : development setting, to be tightened before any production deployment
 
 ## Quick start
 
@@ -154,9 +154,9 @@ curl -X POST "http://localhost:8000/index?reset_collection=false&context_tag=boo
 
 Optional query parameters:
 
-- `metadata_json` — a JSON object as a string, merged into each chunk's metadata
-- `reset_collection` — boolean (default `false`)
-- `context_tag` — string, written into each chunk's metadata for later filtering
+- `metadata_json` : a JSON object as a string, merged into each chunk's metadata
+- `reset_collection` : boolean (default `false`)
+- `context_tag` : string, written into each chunk's metadata for later filtering
 
 ### Query example
 
@@ -194,16 +194,16 @@ pytest -q
 
 Current tests cover:
 
-- `test_models.py` — API data models
-- `test_vector_store.py` — file-content extraction behavior
+- `test_models.py` : API data models
+- `test_vector_store.py` : file-content extraction behavior
 
 ## Troubleshooting
 
-- **`Unable to find matching results`** — lower `min_relevance` or index more data.
-- **`Uploaded file must be UTF-8 text or PDF`** — upload UTF-8 text or a PDF with extractable text (scanned PDFs without OCR will fail).
-- **Connection errors on startup** — verify Postgres is reachable and `.env` credentials match the actual database.
-- **422 on Swagger "Authorize"** — the login endpoint expects JSON, not OAuth2 form. Log in via the `POST /auth/login` endpoint directly to get a token, or use the dedicated `/auth/token` endpoint if configured.
+- **`Unable to find matching results`** : lower `min_relevance` or index more data.
+- **`Uploaded file must be UTF-8 text or PDF`** : upload UTF-8 text or a PDF with extractable text (scanned PDFs without OCR will fail).
+- **Connection errors on startup** : verify Postgres is reachable and `.env` credentials match the actual database.
+- **422 on Swagger "Authorize"** : the login endpoint expects JSON, not OAuth2 form. Log in via the `POST /auth/login` endpoint directly to get a token, or use the dedicated `/auth/token` endpoint if configured.
 
 ## About
 
-Built by [Samuel Verse](https://github.com/samuel-verse) — Security Engineer exploring full-stack development and applied LLM systems.
+Built by [Samuel Verse](https://github.com/samuel-verse) : Security Engineer exploring full-stack development and applied LLM systems.
