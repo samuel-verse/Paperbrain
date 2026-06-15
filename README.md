@@ -206,4 +206,4 @@ Current tests cover:
 
 ## About
 
-Built by [Samuel Verse](https://github.com/samuel-verse) : Security Engineer exploring full-stack development and applied LLM systems.
+Built by [Samuel Verse]([https://samuel-verse.com/]) : Software Engineer.
