@@ -25,17 +25,35 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      kafka:
+        condition: service_started
     env_file:
       - .env
     environment:
       POSTGRES_HOST: postgres
       PGVECTOR_CONNECTION: postgresql+psycopg://raguser:ragpass@postgres:5432/ragdb
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     # Expose for debugging — change back to just 'expose: ["8000"]' later
     ports:
       - "8000:8000"
     volumes:
       - ./:/app
     restart: unless-stopped
+
+  consumer:
+    build: .
+    container_name: kafka_consumer
+    depends_on:
+      kafka:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+    command: ["python", "consumer.py"]
 
   frontend:
     build:
@@ -47,6 +65,29 @@ services:
     ports:
       - "3000:80"
     restart: unless-stopped
-
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: rag_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: rag_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    restart: unless-stopped
 volumes:
   pgdata:

@@ -23,6 +23,7 @@ from auth import (
     verify_password, create_access_token, get_current_user,
     track_document, get_user_documents,
 )
+from kafka_client import publish_event
 
 
 app = FastAPI(title="RAG API")
@@ -131,7 +132,7 @@ def index_documents(
             collection=get_collection_name(),
             file_size=len(raw_bytes),
         )
-
+        publish_event(f"{file.filename} indexed successfully".encode())
         return IndexResponse(
             documents=len(documents),
             chunks=len(chunks),
