@@ -42,13 +42,16 @@ services:
 
   consumer:
     build: .
-    container_name: kafka_consumer
     depends_on:
       kafka:
         condition: service_started
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     environment:
+      POSTGRES_HOST: postgres
+      PGVECTOR_CONNECTION: postgresql+psycopg://raguser:ragpass@postgres:5432/ragdb
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     volumes:
       - ./:/app

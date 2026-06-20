@@ -3,7 +3,7 @@
 .venv
 # Python
 __pycache__
-
+.claude
 # Node
 node_modules/
 

@@ -258,12 +258,23 @@ function IndexPage({ status, setStatus, token, onAuthError }) {
 
         {result && (
           <div style={{ ...st.resultCard, animation: "fadeIn .35s ease" }}>
-            <h4 style={st.resultTitle}>Indexing Complete</h4>
-            <div style={st.resultGrid}>
-              <div style={st.statBox}><span style={st.statNum}>{result.documents}</span><span style={st.statLabel}>Documents</span></div>
-              <div style={st.statBox}><span style={st.statNum}>{result.chunks}</span><span style={st.statLabel}>Chunks</span></div>
-              <div style={st.statBox}><span style={{ ...st.statNum, fontSize: 14, fontFamily: "'JetBrains Mono', monospace" }}>{result.collection}</span><span style={st.statLabel}>Collection</span></div>
-            </div>
+            {result.status === "queued" ? (
+              <>
+                <h4 style={st.resultTitle}>Indexing Queued</h4>
+                <p style={{ margin: 0, fontSize: 13.5, color: "#2e7d32", lineHeight: 1.6 }}>
+                  « {result.filename} » est en cours d'indexation en arrière-plan par le worker. Il apparaîtra dans vos documents une fois traité — rafraîchissez la liste dans quelques secondes.
+                </p>
+              </>
+            ) : (
+              <>
+                <h4 style={st.resultTitle}>Indexing Complete</h4>
+                <div style={st.resultGrid}>
+                  <div style={st.statBox}><span style={st.statNum}>{result.documents}</span><span style={st.statLabel}>Documents</span></div>
+                  <div style={st.statBox}><span style={st.statNum}>{result.chunks}</span><span style={st.statLabel}>Chunks</span></div>
+                  <div style={st.statBox}><span style={{ ...st.statNum, fontSize: 14, fontFamily: "'JetBrains Mono', monospace" }}>{result.collection}</span><span style={st.statLabel}>Collection</span></div>
+                </div>
+              </>
+            )}
           </div>
         )}
         {error && <div style={{ ...st.errorCard, animation: "fadeIn .35s ease" }}><strong>Error:</strong> {error}</div>}

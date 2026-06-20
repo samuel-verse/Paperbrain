@@ -95,7 +95,7 @@ def list_documents(current_user: dict = Depends(get_current_user)):
     return get_user_documents(current_user["id"])
 
 
-@app.post("/index", response_model=IndexResponse)
+@app.post("/index", status_code=202)
 def index_documents(
     file: UploadFile = File(...),
     metadata_json: str | None = Query(default=None),
@@ -118,26 +118,21 @@ def index_documents(
 
         raw_bytes = file.file.read()
         content = extract_content_from_bytes(raw_bytes, resolved_source)
-        documents = [Document(page_content=content, metadata=base_metadata)]
-        chunks = split_text(documents)
-        chunks = set_context_tag(chunks, context_tag)
-        save_to_pgvector(chunks, pre_delete_collection=reset_collection)
+        
+        publish_event({
+            "type": "index_document",
+            "content": content,
+            "metadata": base_metadata,
+            "context_tag": context_tag,
+            "reset_collection": reset_collection,
+            "user_id": current_user["id"],
+            "filename": file.filename or "api_document",
+            "source": resolved_source,
+            "file_size": len(raw_bytes),
+            })
+        
+        return {"status": "queued", "filename": file.filename or "api_document"}
 
-        track_document(
-            user_id=current_user["id"],
-            filename=file.filename or "api_document",
-            source=resolved_source,
-            context_tag=context_tag,
-            chunks=len(chunks),
-            collection=get_collection_name(),
-            file_size=len(raw_bytes),
-        )
-        publish_event(f"{file.filename} indexed successfully".encode())
-        return IndexResponse(
-            documents=len(documents),
-            chunks=len(chunks),
-            collection=get_collection_name(),
-        )
     except HTTPException:
         raise
     except Exception as exc:
