@@ -203,6 +203,9 @@ function IndexPage({ status, setStatus, token, onAuthError }) {
       }
       const data = await res.json();
       setResult(data); setStatus("success");
+      setFile(null);                                  // vide la zone pour permettre un nouvel upload directement
+      setContextTag("");                              // vide le champ Context Tag
+      if (inputRef.current) inputRef.current.value = "";
       fetchDocuments();
     } catch (err) {
       if (err.message === "__UNAUTHORIZED__") return onAuthError();
