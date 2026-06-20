@@ -120,6 +120,31 @@ def get_user_documents(user_id: int) -> list[dict]:
     ]
 
 
+def get_document(doc_id: int, user_id: int) -> dict | None:
+    with psycopg.connect(get_psycopg_connection()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, source, context_tag FROM user_documents WHERE id = %s AND user_id = %s",
+                (doc_id, user_id),
+            )
+            row = cur.fetchone()
+    if row is None:
+        return None
+    return {"id": row[0], "source": row[1], "context_tag": row[2]}
+
+
+def delete_document(doc_id: int, user_id: int) -> int:
+    with psycopg.connect(get_psycopg_connection()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM user_documents WHERE id = %s AND user_id = %s",
+                (doc_id, user_id),
+            )
+            deleted = cur.rowcount
+        conn.commit()
+    return deleted
+
+
 # ── FastAPI dependency ──
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
