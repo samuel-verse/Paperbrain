@@ -10,20 +10,20 @@ Users sign up, upload PDFs or text files, and ask natural-language questions abo
 
 ## Tech stack
 
-- **Backend** : FastAPI · PostgreSQL + pgvector · LangChain · OpenAI embeddings & chat
-- **Frontend** : React 18 · Vite · served via nginx in production
-- **Auth** : JWT (PyJWT) + bcrypt password hashing
-- **Messaging** : Apache Kafka (Confluent Platform) + Zookeeper
-- **Infrastructure** : Docker Compose (app · consumer · postgres · kafka · zookeeper · frontend)
+- **Backend**: FastAPI · PostgreSQL + pgvector · LangChain · OpenAI embeddings & chat
+- **Frontend**: React 18 · Vite · served via nginx in production
+- **Auth**: JWT (PyJWT) + bcrypt password hashing
+- **Messaging**: Apache Kafka (Confluent Platform) + Zookeeper
+- **Infrastructure**: Docker Compose (app · consumer · postgres · kafka · zookeeper · frontend)
 
 ## Architecture highlights
 
-- **Per-user isolation at the vector store level** : queries filter on a `user_id` metadata tag before similarity ranking, so a user cannot retrieve another user's chunks even with crafted queries.
+- **Per-user isolation at the vector store level**: queries filter on a `user_id` metadata tag before similarity ranking, so a user cannot retrieve another user's chunks even with crafted queries.
 - **JWT-based stateless auth** with bcrypt password hashing and configurable token expiry via `ACCESS_TOKEN_EXPIRE_MINUTES`.
-- **Async ingestion via Kafka** : `POST /index` publishes an event to a Kafka topic (returns 202 immediately); a dedicated `consumer` service picks up the job, chunks the document, and indexes it into pgvector — decoupling upload latency from embedding time.
-- **Pluggable ingestion pipeline** : UTF-8 text and PDF (via `pypdf`) extraction, chunked with `RecursiveCharacterTextSplitter`, indexed in pgvector with JSONB metadata.
+- **Async ingestion via Kafka**: `POST /index` publishes an event to a Kafka topic (returns 202 immediately); a dedicated `consumer` service picks up the job, chunks the document, and indexes it into pgvector:decoupling upload latency from embedding time.
+- **Pluggable ingestion pipeline**: UTF-8 text and PDF (via `pypdf`) extraction, chunked with `RecursiveCharacterTextSplitter`, indexed in pgvector with JSONB metadata.
 - **Optional `context_tag`** lets a user partition their own corpus (e.g. one tag per project) without needing separate Postgres collections.
-- **Document tracking and deletion** : each upload is logged in a `user_documents` table; users can delete a document (chunks + record) via the UI or `DELETE /documents/{id}`.
+- **Document tracking and deletion**: each upload is logged in a `user_documents` table; users can delete a document (chunks + record) via the UI or `DELETE /documents/{id}`.
 
 ## Security considerations
 
@@ -58,18 +58,18 @@ Get an OpenAI API key at https://platform.openai.com/api-keys.
 
 ```
 .
-├── api.py               : FastAPI app — auth, /index, /query, /documents endpoints
-├── auth.py              : JWT, bcrypt, user DB helpers, FastAPI dependency
-├── kafka_client.py      : Kafka producer — publishes indexing jobs to the topic
-├── consumer.py          : Kafka consumer worker — chunks & indexes documents async
-├── models.py            : Pydantic request/response models
-├── vector_store.py      : pgvector connection, collection setup, PDF/text extraction
-├── create_database.py   : bulk ingestion script for markdown files in data/books
-├── query_data.py        : CLI query script (similarity search + LLM)
-├── docker-compose.yml   : postgres + kafka + zookeeper + app + consumer + frontend
-├── init.sql             : CREATE EXTENSION vector + users + user_documents tables
+├── api.py              : FastAPI app:auth, /index, /query, /documents endpoints
+├── auth.py             : JWT, bcrypt, user DB helpers, FastAPI dependency
+├── kafka_client.py     : Kafka producer:publishes indexing jobs to the topic
+├── consumer.py         : Kafka consumer worker:chunks & indexes documents async
+├── models.py           : Pydantic request/response models
+├── vector_store.py     : pgvector connection, collection setup, PDF/text extraction
+├── create_database.py  : bulk ingestion script for markdown files in data/books
+├── query_data.py       : CLI query script (similarity search + LLM)
+├── docker-compose.yml  : postgres + kafka + zookeeper + app + consumer + frontend
+├── init.sql            : CREATE EXTENSION vector + users + user_documents tables
 ├── requirements.txt
-└── rag-frontend/        : React + Vite frontend, served via nginx in production
+└── rag-frontend/       : React + Vite frontend, served via nginx in production
 ```
 
 ## Environment variables
@@ -173,9 +173,9 @@ curl -X POST "http://localhost:8000/index?reset_collection=false&context_tag=boo
 
 Optional query parameters:
 
-- `metadata_json` : a JSON object as a string, merged into each chunk's metadata
-- `reset_collection` : boolean (default `false`)
-- `context_tag` : string, written into each chunk's metadata for later filtering
+- `metadata_json`: a JSON object as a string, merged into each chunk's metadata
+- `reset_collection`: boolean (default `false`)
+- `context_tag`: string, written into each chunk's metadata for later filtering
 
 ### Query example
 
@@ -213,18 +213,18 @@ pytest -q
 
 Current tests cover:
 
-- `test_models.py` : API data models
-- `test_vector_store.py` : file-content extraction behavior
+- `test_models.py`: API data models
+- `test_vector_store.py`: file-content extraction behavior
 
 ## Troubleshooting
 
-- **`Unable to find matching results`** : lower `min_relevance` or index more data.
-- **`Uploaded file must be UTF-8 text or PDF`** : upload UTF-8 text or a PDF with extractable text (scanned PDFs without OCR will fail).
-- **Connection errors on startup** : verify Postgres is reachable and `.env` credentials match the actual database.
-- **422 on Swagger "Authorize"** : the login endpoint expects JSON, not OAuth2 form. Log in via the `POST /auth/login` endpoint directly to get a token, or use the dedicated `/auth/token` endpoint if configured.
-- **Document not appearing after upload** : indexing is async wait a moment and refresh. If it never appears, check the `consumer` container logs (`docker compose logs consumer`) for errors.
-- **`Kafka pas encore pret`** in consumer logs : normal at startup; the consumer retries every 3 s until Kafka is ready.
+- **`Unable to find matching results`**: lower `min_relevance` or index more data.
+- **`Uploaded file must be UTF-8 text or PDF`**: upload UTF-8 text or a PDF with extractable text (scanned PDFs without OCR will fail).
+- **Connection errors on startup**: verify Postgres is reachable and `.env` credentials match the actual database.
+- **422 on Swagger "Authorize"**: the login endpoint expects JSON, not OAuth2 form. Log in via the `POST /auth/login` endpoint directly to get a token, or use the dedicated `/auth/token` endpoint if configured.
+- **Document not appearing after upload**: indexing is async wait a moment and refresh. If it never appears, check the `consumer` container logs (`docker compose logs consumer`) for errors.
+- **`Kafka pas encore pret`** in consumer logs: normal at startup; the consumer retries every 3 s until Kafka is ready.
 
 ## About
 
-Built by [Samuel Verse](https://samuel-verse.com/) : Software Engineer.
+Built by [Samuel Verse](https://samuel-verse.com/): Software Engineer.
