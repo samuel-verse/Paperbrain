@@ -1,8 +1,12 @@
 import json
+import os
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi import File, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from langchain.schema import Document
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -26,30 +30,19 @@ from auth import (
 from kafka_client import publish_event
 
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="RAG API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-
-#definir ca plus tard
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+_allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()] or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# ══════════════════════════════════════════
-#  DEBUG — remove after fixing
-# ══════════════════════════════════════════
-
-
-#a retirer avant prod
-@app.get("/debug/headers")
-def debug_headers(request: Request):
-    return {
-        "authorization": request.headers.get("authorization", "MISSING"),
-        "all_headers": dict(request.headers),
-    }
 
 
 # ══════════════════════════════════════════
@@ -57,7 +50,8 @@ def debug_headers(request: Request):
 # ══════════════════════════════════════════
 
 @app.post("/auth/register", response_model=AuthResponse)
-def register(req: RegisterRequest):
+@limiter.limit("5/minute")
+def register(request: Request, req: RegisterRequest):
     if get_user_by_email(req.email):
         raise HTTPException(status_code=400, detail="Email already registered.")
     if get_user_by_username(req.username):
@@ -70,7 +64,8 @@ def register(req: RegisterRequest):
 
 
 @app.post("/auth/login", response_model=AuthResponse)
-def login(req: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("10/minute")
+def login(request: Request, req: OAuth2PasswordRequestForm = Depends()):
     user = get_user_by_email(req.username)
     if not user or not verify_password(req.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password.")
@@ -118,7 +113,7 @@ def index_documents(
 
         raw_bytes = file.file.read()
         content = extract_content_from_bytes(raw_bytes, resolved_source)
-        
+
         publish_event({
             "type": "index_document",
             "content": content,
@@ -130,7 +125,7 @@ def index_documents(
             "source": resolved_source,
             "file_size": len(raw_bytes),
             })
-        
+
         return {"status": "queued", "filename": file.filename or "api_document"}
 
     except HTTPException:
@@ -140,17 +135,14 @@ def index_documents(
 
 @app.delete("/documents/{doc_id}", status_code=204)
 def delete_document_endpoint(doc_id: int, current_user: dict = Depends(get_current_user)):
-        # Check if the document belongs to the current user
         user_doc = check_user_documents(doc_id, current_user["id"])
         if user_doc is None:
             raise HTTPException(status_code=404, detail="Document not found.")
 
-        # Delete associated chunks from the vector store
         delete_document_chunks(current_user["id"],user_doc["source"],user_doc.get("context_tag"))
-        # Delete the document from the database
         delete_document(doc_id,current_user["id"])
 
-    
+
 @app.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest, current_user: dict = Depends(get_current_user)):
     try:

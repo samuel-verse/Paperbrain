@@ -22,7 +22,7 @@ if not SECRET_KEY:
         "(see _env.example)"
     )
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -159,15 +159,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        print(f"[AUTH] Decoding token: {token[:20]}...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
-        print(f"[AUTH] Decoded payload sub={user_id}")
         if user_id is None:
-            print("[AUTH] FAIL: sub is None")
             raise credentials_exception
-    except jwt.PyJWTError as e:
-        print(f"[AUTH] FAIL: JWT decode error: {e}")
+    except jwt.PyJWTError:
         raise credentials_exception
 
     with psycopg.connect(get_psycopg_connection()) as conn:
@@ -175,7 +171,5 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
             cur.execute("SELECT id, email, username FROM users WHERE id = %s", (user_id,))
             row = cur.fetchone()
     if row is None:
-        print(f"[AUTH] FAIL: user {user_id} not found in DB")
         raise credentials_exception
-    print(f"[AUTH] OK: user {row[2]}")
     return {"id": row[0], "email": row[1], "username": row[2]}

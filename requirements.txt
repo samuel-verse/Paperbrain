@@ -16,5 +16,6 @@ python-multipart
 bcrypt==4.2.1
 PyJWT==2.9.0
 kafka-python-ng==2.2.3
+slowapi==0.1.9
 
 
