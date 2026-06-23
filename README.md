@@ -157,7 +157,7 @@ All non-auth endpoints below require `Authorization: Bearer <token>`.
 | Method | Path                  | Description                                                     |
 | ------ | --------------------- | --------------------------------------------------------------- |
 | GET    | `/documents`          | List documents uploaded by the current user                     |
-| POST   | `/index`              | Upload a file — queues it for async indexing (returns 202)      |
+| POST   | `/index`              | Upload a file: queues it for async indexing (returns 202)      |
 | DELETE | `/documents/{doc_id}` | Delete a document's chunks and tracking record                  |
 | POST   | `/query`              | Ask a question against the current user's corpus                |
 
