@@ -7,9 +7,9 @@ BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
 
 producer = KafkaProducer(
     bootstrap_servers=BOOTSTRAP_SERVERS,
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')   
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 
 def publish_event(event: dict):
-    producer.send('test', value=event)   
+    producer.send('test', value=event)
     producer.flush()

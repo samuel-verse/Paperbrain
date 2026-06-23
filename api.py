@@ -17,11 +17,11 @@ from models import (
     QueryRequest, QueryResponse, IndexResponse, DocumentInfo,
 )
 from query_data import PROMPT_TEMPLATE
-from vector_store import create_vector_store, get_collection_name, extract_content_from_bytes, delete_document_chunks
+from vector_store import create_vector_store, get_collection_name, extract_content_from_bytes,delete_document_chunks
 from auth import (
     get_user_by_email, get_user_by_username, create_user,
     verify_password, create_access_token, get_current_user,
-    track_document, get_user_documents, get_document, delete_document,
+    track_document, get_user_documents,check_user_documents,delete_document
 )
 from kafka_client import publish_event
 
@@ -95,16 +95,6 @@ def list_documents(current_user: dict = Depends(get_current_user)):
     return get_user_documents(current_user["id"])
 
 
-@app.delete("/documents/{doc_id}", status_code=204)
-def delete_document_endpoint(doc_id: int, current_user: dict = Depends(get_current_user)):
-    doc = get_document(doc_id, current_user["id"])
-    if doc is None:
-        raise HTTPException(status_code=404, detail="Document not found.")
-    # 1) supprimer les embeddings du vector store, 2) supprimer la ligne de suivi
-    delete_document_chunks(current_user["id"], doc["source"], doc.get("context_tag"))
-    delete_document(doc_id, current_user["id"])
-
-
 @app.post("/index", status_code=202)
 def index_documents(
     file: UploadFile = File(...),
@@ -148,7 +138,19 @@ def index_documents(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
+@app.delete("/documents/{doc_id}", status_code=204)
+def delete_document_endpoint(doc_id: int, current_user: dict = Depends(get_current_user)):
+        # Check if the document belongs to the current user
+        user_doc = check_user_documents(doc_id, current_user["id"])
+        if user_doc is None:
+            raise HTTPException(status_code=404, detail="Document not found.")
 
+        # Delete associated chunks from the vector store
+        delete_document_chunks(current_user["id"],user_doc["source"],user_doc.get("context_tag"))
+        # Delete the document from the database
+        delete_document(doc_id,current_user["id"])
+
+    
 @app.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest, current_user: dict = Depends(get_current_user)):
     try:

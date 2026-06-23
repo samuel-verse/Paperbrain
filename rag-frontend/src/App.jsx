@@ -47,7 +47,6 @@ const Icons = {
   dropUpload: <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
   logout: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
   user: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>,
-  trash: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>,
 };
 
 
@@ -187,19 +186,15 @@ function IndexPage({ status, setStatus, token, onAuthError }) {
   const clearFile = () => { setFile(null); setResult(null); setError(null); setStatus("idle"); if (inputRef.current) inputRef.current.value = ""; };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Supprimer ce document et ses données indexées ?")) return;
-    try {
-      const res = await apiFetch(`/documents/${id}`, token, { method: "DELETE" });
-      if (!res.ok && res.status !== 204) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || `Server returned ${res.status}`);
-      }
-      setHistory((prev) => prev.filter((d) => d.id !== id));
-    } catch (e) {
-      if (e.message === "__UNAUTHORIZED__") return onAuthError();
-      alert("Erreur lors de la suppression : " + e.message);
-    }
-  };
+  try {
+    const res = await apiFetch(`/documents/${id}`, token, { method: "DELETE" });
+    if (!res.ok && res.status !== 204) throw new Error(`Erreur ${res.status}`);
+    setHistory((prev) => prev.filter((d) => d.id !== id));   // retire le doc de la liste
+  } catch (e) {
+    if (e.message === "__UNAUTHORIZED__") return onAuthError();
+    alert("Erreur : " + e.message);
+  }
+};
 
   const handleUpload = async () => {
     if (!file) return;
@@ -314,10 +309,13 @@ function IndexPage({ status, setStatus, token, onAuthError }) {
               <div key={item.id} style={{ ...st.historyItem, animation: `slideIn .3s ease ${i * 0.05}s both` }}>
                 <div style={st.historyTop}>
                   <span style={st.historyFilename}>{item.filename}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={st.historyTime}>{formatDate(item.created_at)}</span>
-                    <button onClick={() => handleDelete(item.id)} title="Supprimer" style={st.deleteBtn}>{Icons.trash}</button>
-                  </span>
+                  <span style={st.historyTime}>{formatDate(item.created_at)}</span>
+                  <button onClick={() => handleDelete(item.id)} title="Delete Document"
+                  style={{ border: "none", background: "transparent", cursor: "pointer", color: "#ff0000", display: "flex", alignItems: "center" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
+                  </svg>
+                  </button>
                 </div>
                 <div style={st.historyMeta}>
                   <span>{item.chunks} chunks</span>
@@ -608,7 +606,6 @@ const st = {
   historyTop: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   historyFilename: { fontSize: 14, fontWeight: 600, color: "#1a1a2e" },
   historyTime: { fontSize: 12, color: "#999" },
-  deleteBtn: { display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, border: "none", borderRadius: 6, background: "transparent", color: "#c0c4cc", cursor: "pointer", transition: "all .15s" },
   historyMeta: { fontSize: 12.5, color: "#888", display: "flex", alignItems: "center", gap: 6 },
   historyDot: { color: "#ccc" },
   tagChip: { fontSize: 11, fontWeight: 600, background: "#eef0fb", color: "#3949ab", padding: "1px 8px", borderRadius: 4 },

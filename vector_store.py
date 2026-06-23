@@ -74,24 +74,6 @@ def create_vector_store_from_documents(documents, pre_delete_collection: bool = 
     return store
 
 
-def delete_document_chunks(user_id, source: str, context_tag: str | None = None) -> int:
-    """Supprime du vector store tous les chunks d'un document (par user_id + source)."""
-    sql = (
-        "DELETE FROM langchain_pg_embedding "
-        "WHERE cmetadata->>'user_id' = %s AND cmetadata->>'source' = %s"
-    )
-    params = [str(user_id), source]
-    if context_tag:
-        sql += " AND cmetadata->>'context_tag' = %s"
-        params.append(context_tag)
-    with psycopg.connect(get_psycopg_connection()) as conn:
-        with conn.cursor() as cur:
-            cur.execute(sql, params)
-            deleted = cur.rowcount
-        conn.commit()
-    return deleted
-
-
 def extract_content_from_bytes(raw_bytes: bytes, source: str) -> str:
     if source.lower().endswith(".pdf"):
         reader = PdfReader(BytesIO(raw_bytes))
@@ -107,3 +89,19 @@ def extract_content_from_bytes(raw_bytes: bytes, source: str) -> str:
     if not content.strip():
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
     return content
+
+def delete_document_chunks(user_id: int, source: str, context_tag: str | None = None) -> int:
+    sql = (
+        "DELETE FROM langchain_pg_embedding "
+        "WHERE cmetadata->>'user_id' = %s AND cmetadata->>'source' = %s"
+    )
+    params = [str(user_id), source]
+    if context_tag:
+        sql += " AND cmetadata->>'context_tag' = %s"
+        params.append(context_tag)
+    with psycopg.connect(get_psycopg_connection()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            deleted = cur.rowcount
+        conn.commit()
+    return deleted
