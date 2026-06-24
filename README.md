@@ -9,8 +9,6 @@ https://github.com/user-attachments/assets/fb6357ec-ee41-43dc-b2f5-220d07704a90
 
 
 
-https://github.com/user-attachments/assets/47c5f4ab-8826-4d5c-818d-5ae4c59449ff
-
 
 
 ## What it does
