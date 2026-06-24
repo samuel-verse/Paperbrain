@@ -2,7 +2,16 @@
 
 A multi-user RAG (retrieval-augmented generation) platform that lets users upload documents and chat with them. Built as a portfolio project to demonstrate full-stack engineering from authentication and vector search to containerized deployment.
 
-🎥 **Demo video:** *coming soon*
+
+
+
+🎥 **Demo video:** 
+https://github.com/user-attachments/assets/323d28a2-4f06-4ead-958d-be8b224ae0ed
+
+
+https://github.com/user-attachments/assets/47c5f4ab-8826-4d5c-818d-5ae4c59449ff
+
+
 
 ## What it does
 
