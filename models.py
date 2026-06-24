@@ -37,7 +37,7 @@ class IngestRequest(BaseModel):
 
 class QueryRequest(BaseModel):
     query_text: str
-    k: int = 3
+    k: int = 14
     min_relevance: float = 0.7
     context_tag: Optional[str] = None
 

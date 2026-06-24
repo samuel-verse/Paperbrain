@@ -340,7 +340,7 @@ function ChatPage({ token, onAuthError }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [contextTag, setContextTag] = useState("");
-  const [k, setK] = useState(3);
+  const [k, setK] = useState(14);
   const [minRelevance, setMinRelevance] = useState(0.7);
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef();
