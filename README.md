@@ -235,7 +235,6 @@ Current tests cover:
 - **Connection errors on startup**: verify Postgres is reachable and `.env` credentials match the actual database.
 - **422 on Swagger "Authorize"**: the login endpoint expects JSON, not OAuth2 form. Log in via the `POST /auth/login` endpoint directly to get a token, or use the dedicated `/auth/token` endpoint if configured.
 - **Document not appearing after upload**: indexing is async wait a moment and refresh. If it never appears, check the `consumer` container logs (`docker compose logs consumer`) for errors.
-- **`Kafka pas encore pret`** in consumer logs: normal at startup; the consumer retries every 3 s until Kafka is ready.
 
 ## About
 
